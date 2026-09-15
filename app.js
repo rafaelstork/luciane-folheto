@@ -1,4 +1,4 @@
-import { mountGallery } from './modules/gallery.js';
+import { mountGallery } from './modules/gallery.js?v=2.0.0';
 
 let mounted = null;
 async function initApp({restore=false}={}) {
@@ -202,7 +202,7 @@ async function initApp({restore=false}={}) {
       const element=document.querySelector('.material-scene');
       const observer=new IntersectionObserver(entries=>{
         if(!entries.some(e=>e.isIntersecting))return;observer.disconnect();
-        import('./modules/material-scene.js').then(async({mountMaterialScene})=>{
+        import('./modules/material-scene.js?v=2.0.0').then(async({mountMaterialScene})=>{
           if(!alive||generation!==sceneGeneration)return;
           const instance=await mountMaterialScene({element,gsap,reduced});
           if(!alive||generation!==sceneGeneration){instance.destroy();return;}
