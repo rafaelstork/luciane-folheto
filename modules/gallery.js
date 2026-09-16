@@ -208,12 +208,13 @@ export function mountGallery({ gsap = null, reduced = () => false, scroll, root 
 
   function makeImage(image, index) {
     image.removeAttribute('id');
+    image.removeAttribute('style');
     image.className = 'gallery-image';
     image.alt = items[index].link.querySelector('img')?.alt || items[index].title;
     image.draggable = false;
     return image;
   }
-  function showImage(image, index, direction) {
+  function showImage(image, index, direction, transition = true) {
     finishImage();
     const old = activeImage;
     activeImage = makeImage(image, index);
@@ -226,6 +227,7 @@ export function mountGallery({ gsap = null, reduced = () => false, scroll, root 
       finishImage();
       if (opened && !closing) announce.textContent = `${items[index].title}. Imagem ${index + 1} de ${items.length}.`;
     };
+    if (!transition) { complete(); return; }
     runAnimation(() => {
       imageTimeline = engine.timeline({ onComplete: complete });
       imageTimeline.fromTo(activeImage,
@@ -234,7 +236,7 @@ export function mountGallery({ gsap = null, reduced = () => false, scroll, root 
       if (old) imageTimeline.to(old, { x: direction * -12, opacity: 0, duration: 0.3, ease: 'power2.inOut' }, 0);
     }, complete);
   }
-  async function requestImage(index, direction = 1) {
+  async function requestImage(index, direction = 1, transition = true) {
     if (!alive || !opened || closing || index < 0 || index >= items.length) return;
     requestedIndex = index;
     const token = ++generation;
@@ -242,14 +244,14 @@ export function mountGallery({ gsap = null, reduced = () => false, scroll, root 
     finishImage();
     updateControls();
     announce.textContent = '';
-    setStatus('Carregando imagem…');
+    if (transition || !activeImage) setStatus('Carregando imagem…');
     const controller = new win.AbortController();
     pending = controller;
     try {
       const image = await loadImage(items[index].href, controller.signal);
       if (!alive || !opened || closing || token !== generation) return;
       pending = null;
-      showImage(image, index, direction);
+      showImage(image, index, direction, transition);
     } catch (error) {
       if (!alive || !opened || closing || token !== generation || error.name === 'AbortError') return;
       pending = null;
@@ -331,12 +333,14 @@ export function mountGallery({ gsap = null, reduced = () => false, scroll, root 
     closing = false;
     scroll?.lock(lockOwner);
     closeButton.focus({ preventScroll: true });
-    runAnimation(() => {
-      panelTimeline = engine.timeline();
-      panelTimeline.fromTo(dialog, { '--gallery-backdrop-opacity': 0 }, { '--gallery-backdrop-opacity': 1, duration: 0.3 }, 0);
-      panelTimeline.fromTo(panel, { y: 18, opacity: 0.65 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, 0);
-    }, () => { resetVisual(panel); });
-    requestImage(index, 1);
+    // Opening presents the selected photograph immediately. Only intentional
+    // previous/next actions animate images; upgrading a thumbnail never does.
+    resetVisual(panel);
+    dialog.style.setProperty('--gallery-backdrop-opacity', '1');
+    if (activeImage && thumbnail.currentSrc === items[index].href) {
+      setStatus();
+      announce.textContent = `${items[index].title}. Imagem ${index + 1} de ${items.length}.`;
+    } else requestImage(index, 1, false);
     return true;
   }
 
