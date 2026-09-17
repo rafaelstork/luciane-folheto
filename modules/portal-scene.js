@@ -74,7 +74,10 @@ export function mountPortalScene({element,gsap,reduced}){
       on(element,'pointerleave',()=>{px(0);py(0);});
     }catch{if(alive)release();}
   }
-  const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){load();if(!document.hidden)intro?.resume();dirty=true;}else intro?.pause();},{threshold:.01});observer.observe(element);
+  // Prepare WebGL before the section reaches the viewport, while keeping the
+  // entrance animation tied to actual visibility.
+  const preloadObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting){load();preloadObserver.disconnect();}},{threshold:0,rootMargin:'50% 0px'});preloadObserver.observe(element);
+  const visibilityObserver=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){load();if(!document.hidden)intro?.resume();dirty=true;}else intro?.pause();},{threshold:.01});visibilityObserver.observe(element);
   on(document,'visibilitychange',()=>{if(document.hidden)intro?.pause();else if(visible){intro?.resume();dirty=true;}});
-  return {destroy(){alive=false;observer.disconnect();events.abort();release();}};
+  return {destroy(){alive=false;preloadObserver.disconnect();visibilityObserver.disconnect();events.abort();release();}};
 }

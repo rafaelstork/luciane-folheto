@@ -1,9 +1,9 @@
-import { mountProjectRail } from './modules/project-rail.js?v=2.1.0';
-import { mountGallery } from './modules/gallery.js?v=2.1.0';
+import { mountProjectRail } from './modules/project-rail.js?v=2.1.1';
+import { mountGallery } from './modules/gallery.js?v=2.1.1';
 
-import { mountComposition } from './modules/composition.js?v=2.1.0';
-import { mountPortalScene } from './modules/portal-scene.js?v=2.1.0';
-import { mountNavigation } from './modules/navigation.js?v=2.1.0';
+import { mountComposition } from './modules/composition.js?v=2.1.1';
+import { mountPortalScene } from './modules/portal-scene.js?v=2.1.1';
+import { mountNavigation } from './modules/navigation.js?v=2.1.1';
 let mounted = null, navigation = null;
 async function initApp({restore=false,fromVisit=false}={}) {
   mounted?.destroy();
